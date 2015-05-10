@@ -8,8 +8,8 @@ import           Data.List (sort, group)
 import           Data.Maybe (fromJust)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
-import           Data.Array (Array, array, (!))
-import qualified Data.Array as A
+import           Data.Array.Unboxed (Array, array, (!))
+import qualified Data.Array.Unboxed as A
 import           Control.Arrow ((&&&))
 
 type N = Int
@@ -58,7 +58,6 @@ handleInput = pack . show . coerceInput . map (map toInt . words) . lines
           group'' ((a, n):acc) (x:xs) | a == x = let n' = n + 1 in n' `seq` group'' ((a, n') : acc) xs
           group'' acc          (x:xs) = group'' ((x, 1) : acc) xs
           group'' acc          []     = acc
-
 
 main :: IO ()
 main = interact handleInput
