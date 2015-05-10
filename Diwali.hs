@@ -4,12 +4,13 @@ module Main
 
 import           Prelude hiding (interact, lines, unlines, words)
 import           Data.ByteString.Char8 (pack, ByteString, words, lines, interact, readInt)
-import           Data.List (foldl')
+import           Data.List (sort, group)
 import           Data.Maybe (fromJust)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
-import           Data.Array.IArray (Array, array, (!))
-import qualified Data.Array.IArray as A
+import           Data.Array (Array, array, (!))
+import qualified Data.Array as A
+import           Control.Arrow ((&&&))
 
 type N = Int
 
@@ -45,14 +46,19 @@ handleInput = pack . show . coerceInput . map (map toInt . words) . lines
           coerceInput ([buildings, height, jumpLoss]
                       : people
                       ) = diwali buildings height jumpLoss
-                                 (tally . zip [1..] . map (drop 1) $ people)
+                                 (M.fromList . concat
+                                 . zipWith annotate [1..]
+                                 . map perBuilding $ people)
           coerceInput _ = error "invalid input"
-          tally :: [(N, [N])] -> PeopleMap
-          tally = M.fromListWith (+) . flip zip (repeat 1) . allPeople
-          allPeople :: [(N, [N])] -> [(N, N)]
-          allPeople = concatMap annotatePeople
-          annotatePeople :: (N, [N]) -> [(N, N)]
-          annotatePeople (n, floors) = zip (repeat n) floors
+          annotate :: Building -> [(Floor, N)] -> [(Loc, N)]
+          annotate b = map (\(f, n) -> ((b, f), n))
+          perBuilding :: [Floor] -> [(Floor, N)]
+          perBuilding =  group' . sort . drop 1
+          group' = group'' []
+          group'' ((a, n):acc) (x:xs) | a == x = let n' = n + 1 in n' `seq` group'' ((a, n') : acc) xs
+          group'' acc          (x:xs) = group'' ((x, 1) : acc) xs
+          group'' acc          []     = acc
+
 
 main :: IO ()
 main = interact handleInput
